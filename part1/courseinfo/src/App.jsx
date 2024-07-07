@@ -39,7 +39,7 @@ const App = () => {
     <div>
       <Header course={course} />
       <Parts course={course} />
-      <Total a={course.parts[0].exercises} b={course.parts[1].exercises} c={course.parts[0].exercises} />
+      <Total a={course.parts[0].exercises} b={course.parts[1].exercises} c={course.parts[2].exercises} />
 
     </div>
   )
