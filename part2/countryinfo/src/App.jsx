@@ -26,6 +26,9 @@ const App = () => {
   const [matchCountryList, setMatchCountryList] = useState([])
   const [lat, setLat] = useState('')
   const [lng, setLng] = useState('')
+  const [temperature, setTemperature] = useState('')
+  const [windSpeed, setWindSpeed] = useState('')
+  const [weatherIcon, setWeatherIcon] = useState('')
 
   useEffect(() => {
     axios
@@ -51,48 +54,16 @@ const App = () => {
     if (match.length === 1) {
       const selectedCountry = match[0]
       console.log('fetching info for', selectedCountry)
-      axios
-        .get(`https://studies.cs.helsinki.fi/restcountries/api/name/${selectedCountry}`)
-        .then(response => {
-          const countryData = response.data
-          setReminder('')
-          setName(countryData.name.common)
-          setCapital(countryData.capital[0])
-          setArea(countryData.area)
-          setLanguages(Object.values(countryData.languages))
-          setFlag(countryData.flags.svg)
-          setLat(countryData.latlng[0])
-          setLng(countryData.latlng[1])
-        })
-        .catch(error => {
-          console.error('Error fetching country info:', error)
-          return axios.get()
-        })
+      fetchData(selectedCountry)
     } else if (match.length > 10 && value !== null) {
-      console.log('value is', value);
+      emptyTheValue()
       setReminder('Too many matches, specify another filter') 
-      if (value === null) setReminder('')
-      setName('')
-      setCapital('')
-      setArea('')
-      setLanguages([])
-      setFlag('')
     } else {
-      setReminder('')
-      setName('')
-      setCapital('')
-      setArea('')
-      setLanguages([])
-      setFlag('')
+      emptyTheValue()
     }
   }, [value, countryName])
 
-  const handleChange = (event) => {
-    setValue(event.target.value)
-  }
-  const showTheInfo = (item) => {
-    console.log(item)
-    const selectedCountry = item.country
+  const fetchData = (selectedCountry) => {
     axios
     .get(`https://studies.cs.helsinki.fi/restcountries/api/name/${selectedCountry}`)
     .then(response => {
@@ -103,19 +74,50 @@ const App = () => {
       setArea(countryData.area)
       setLanguages(Object.values(countryData.languages))
       setFlag(countryData.flags.svg)
-      setMatchCountryList([])
+      setLat(countryData.latlng[0])
+      setLng(countryData.latlng[1])
+      return {lat, lng}
+    })
+    .then(({lat, lng}) => {
+      return axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&units=metric&appid=83805fd299f365b63571755d09e3f9a7`)
+    })
+    .then(response => {
+      const weatherData = response.data
+      setTemperature(weatherData.main.temp)
+      setWindSpeed(weatherData.wind.speed)
+      setWeatherIcon(weatherData.weather[0].icon)
     })
     .catch(error => {
-      console.error('Error fetching country info:', error)
+      console.error('Error fetching country info:', error)         
     })
+
   }
 
+  const handleChange = (event) => {
+    setValue(event.target.value)
+  }
+
+  const showTheInfo = (item) => {
+    const selectedCountry = item.country
+    fetchData(selectedCountry)
+    setMatchCountryList([])
+  }
+
+  const emptyTheValue = () => {
+    setReminder('')
+    setName('')
+    setCapital('')
+    setArea('')
+    setLanguages([])
+    setFlag('')
+    setTemperature('')
+    setWeatherIcon('')
+    setWindSpeed('')
+  }
   return (
     <div>
       <OnSearch value={value} handleChange={handleChange} />
-      <pre >
-        < >
-        {matchCountryList.length < 10 && matchCountryList.length > 1 && (
+      {matchCountryList.length < 10 && matchCountryList.length > 1 && (
           <ul>
             {matchCountryList.map((country, index) => (
               <li key={index}>{country}
@@ -123,18 +125,15 @@ const App = () => {
               </li>
             ))}
           </ul>
-          
         )}
-        
-        </>
-
         {reminder && <p>{reminder}</p>}
         <h1>{name}</h1>
-        {capital && <p>capital {capital}</p>}
-        {area && <p>area {area}</p>}
+        {capital && <>capital {capital}</>}
+        <br></br>
+        {area && <>area {area}</>}
         {languages.length > 0 && (
           <div>
-            <h2>Languages:</h2>
+            <h4>Language:</h4>
             <ul>
               {languages.map((language, index) => (
                 <li key={index}>{language}</li>
@@ -142,8 +141,11 @@ const App = () => {
             </ul>
           </div>
         )}
-      </pre><br></br>
-      {flag && <img src={flag} alt="flag" width="100" />}
+      {flag && <img src={flag} alt="flag" width="200" />}
+      {temperature && <h2>Weather in {capital}</h2>}
+      {temperature && <p>temperature {temperature} Celcius</p>}
+      {weatherIcon && <img src={`https://openweathermap.org/img/wn/${weatherIcon}@2x.png`} alt="weather" width="120"/>}
+      {windSpeed && <p>wind {windSpeed} m/s</p>}
     </div>
   )
 }
