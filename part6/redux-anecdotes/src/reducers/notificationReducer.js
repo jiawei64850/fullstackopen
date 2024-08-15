@@ -17,9 +17,9 @@ console.log(notificationSlice);
 
 export const { setMessage, clearMessage } = notificationSlice.actions;
 
-export const setNotification = (massage, timeout) => {
+export const setNotification = (message, timeout) => {
   return async (dispatch) => {
-    await dispatch(setMessage(massage));
+    await dispatch(setMessage(message));
     setTimeout(() => {
       dispatch(clearMessage());
     }, timeout);
